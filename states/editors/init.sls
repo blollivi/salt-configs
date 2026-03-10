@@ -1,33 +1,23 @@
-# editors/init.sls — VS Code via Microsoft apt repo
+# editors/init.sls — VS Code extensions + settings for WSL
+#
+# VS Code itself must be installed on WINDOWS with the "WSL" extension
+# (ms-vscode-remote.remote-wsl). That extension makes the `code` binary
+# available inside WSL, which is what we use below.
+#
+# Windows install one-liner (run in PowerShell as admin):
+#   winget install Microsoft.VisualStudioCode
+#   code --install-extension ms-vscode-remote.remote-wsl
 
 {% set user = salt['pillar.get']('user:name', 'brendan') %}
 {% set home  = salt['pillar.get']('user:home', '/home/' ~ user) %}
 
-vscode_keyring:
+# Guard: skip extension install if `code` is not on PATH (WSL extension not set up yet)
+vscode_check:
   cmd.run:
-    - name: |
-        curl -fsSL https://packages.microsoft.com/keys/microsoft.asc \
-          | gpg --dearmor -o /usr/share/keyrings/microsoft.gpg
-        chmod go+r /usr/share/keyrings/microsoft.gpg
-    - unless: test -f /usr/share/keyrings/microsoft.gpg
+    - name: which code
+    - onfail_stop: True
 
-vscode_repo:
-  file.managed:
-    - name: /etc/apt/sources.list.d/vscode.list
-    - contents: |
-        deb [arch=amd64,arm64,armhf signed-by=/usr/share/keyrings/microsoft.gpg]
-        https://packages.microsoft.com/repos/code stable main
-    - require:
-      - cmd: vscode_keyring
-
-vscode:
-  pkg.installed:
-    - name: code
-    - refresh: True
-    - require:
-      - file: vscode_repo
-
-# ── VS Code extensions ────────────────────────────────────────
+# ── VS Code extensions (installed into WSL via `code` tunnel) ─
 {% for ext in salt['pillar.get']('vscode:extensions', []) %}
 vscode_ext_{{ ext | replace('.', '_') | replace('-', '_') }}:
   cmd.run:
@@ -35,21 +25,20 @@ vscode_ext_{{ ext | replace('.', '_') | replace('-', '_') }}:
     - runas: {{ user }}
     - env:
       - HOME: {{ home }}
-      - DISPLAY: ':0'
     - require:
-      - pkg: vscode
+      - cmd: vscode_check
 {% endfor %}
 
-# ── VS Code user settings ─────────────────────────────────────
+# ── VS Code user settings (WSL-side path used by Remote-WSL) ──
 vscode_settings_dir:
   file.directory:
-    - name: {{ home }}/.config/Code/User
+    - name: {{ home }}/.vscode-server/data/Machine
     - user: {{ user }}
     - makedirs: True
 
 vscode_settings:
   file.managed:
-    - name: {{ home }}/.config/Code/User/settings.json
+    - name: {{ home }}/.vscode-server/data/Machine/settings.json
     - source: salt://editors/files/settings.json
     - user: {{ user }}
     - mode: '0644'

@@ -1,5 +1,6 @@
 base:
   '*':
+    - wsl
     - common
     - shell
     - python-dev

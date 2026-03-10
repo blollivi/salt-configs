@@ -1,4 +1,4 @@
-# Pillar data for desktop/personal machine
+# Pillar data for Windows WSL2 Ubuntu machine
 # Adjust these values to match your system
 
 user:

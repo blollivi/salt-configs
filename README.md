@@ -1,33 +1,47 @@
 # salt-configs
 
-Personal [SaltStack](https://saltproject.io/) states for my Linux (Ubuntu/Debian) machine — applied masterless with `salt-call --local`.
+Personal [SaltStack](https://saltproject.io/) states for my **Windows WSL2 (Ubuntu)** machine — applied masterless with `salt-call --local`.
+
+## Prerequisites (Windows side)
+
+Before running Salt inside WSL, do these two things on Windows:
+
+1. **Install VS Code** (if not already installed):
+   ```powershell
+   winget install Microsoft.VisualStudioCode
+   ```
+2. **Install the WSL extension** — this makes the `code` binary available inside WSL:
+   ```powershell
+   code --install-extension ms-vscode-remote.remote-wsl
+   ```
 
 ## What's included
 
 | State | What it configures |
 |---|---|
+| `wsl` | `/etc/wsl.conf` — systemd, automount options, Windows interop (keeps `code` on PATH) |
 | `common` | git, curl, ripgrep, fd, bat, fzf, direnv, tmux, jq, build tools |
-| `shell` | zsh + Oh My Zsh + Powerlevel10k theme + zsh-autosuggestions, zsh-syntax-highlighting, you-should-use |
-| `python-dev` | [uv](https://docs.astral.sh/uv/) (Python version & package manager), GitHub CLI, git global config, direnv config, uv shell completions |
-| `editors` | VS Code via Microsoft apt repo, curated extension list, opinionated `settings.json` |
+| `shell` | zsh + Oh My Zsh + Powerlevel10k + zsh-autosuggestions, zsh-syntax-highlighting, you-should-use |
+| `python-dev` | [uv](https://docs.astral.sh/uv/) (Python version & package manager), GitHub CLI, git global config, direnv config, uv zsh completions |
+| `editors` | VS Code extensions (installed into WSL via `code` CLI) + WSL-side `settings.json` |
 | `fonts` | JetBrainsMono Nerd Font v3 (installed to `~/.local/share/fonts`) |
+
+> **Note:** VS Code itself is installed on Windows. The `editors` state only installs extensions and settings via the `code` binary that the WSL extension exposes inside WSL.
 
 ## Quick start
 
-### One-liner (clone + bootstrap)
+```bash
+# 1. Edit your username/email first
+nano ~/salt-configs/pillar/windows-wsl.sls
+
+# 2. Install Salt + apply everything
+cd ~/salt-configs && make install-salt && make apply
+```
+
+Or on a fresh WSL distro:
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/blollivi/salt-configs/main/bootstrap.sh)
-```
-
-### Manual
-
-```bash
-git clone https://github.com/blollivi/salt-configs ~/salt-configs
-cd ~/salt-configs
-
-make install-salt   # install Salt & configure masterless mode
-make apply          # sync states/pillar then run salt-call
 ```
 
 ### Dry run (see what would change without applying)
@@ -36,13 +50,22 @@ make apply          # sync states/pillar then run salt-call
 make apply-dry
 ```
 
+## After first apply
+
+The `wsl` state updates `/etc/wsl.conf`. Restart WSL to apply those changes:
+
+```powershell
+# Run in Windows PowerShell
+wsl --shutdown
+```
+
 ## Customise
 
-Edit **`pillar/desktop.sls`** before applying:
+Edit **`pillar/windows-wsl.sls`** before applying:
 
 ```yaml
 user:
-  name: yourname        # your Linux username
+  name: yourname        # your WSL username
   home: /home/yourname
   email: you@example.com
   full_name: Your Name
@@ -54,19 +77,20 @@ user:
 
 ```
 salt-configs/
-├── bootstrap.sh          # one-shot setup script
-├── Makefile              # convenience targets
-├── minion                # Salt minion config (masterless)
-├── top.sls               # maps states to hosts
+├── bootstrap.sh               # one-shot setup script
+├── Makefile                   # convenience targets
+├── minion                     # Salt minion config (masterless)
+├── top.sls                    # maps states to hosts
 ├── pillar/
 │   ├── top.sls
-│   └── desktop.sls       # ← edit this for your machine
+│   └── windows-wsl.sls        # ← edit this for your machine
 └── states/
-    ├── common/           # base CLI tools
-    ├── shell/            # zsh + oh-my-zsh + plugins
-    ├── python-dev/       # uv, gh CLI, git config
-    ├── editors/          # VS Code
-    └── fonts/            # Nerd Fonts
+    ├── wsl/                   # /etc/wsl.conf + interop
+    ├── common/                # base CLI tools
+    ├── shell/                 # zsh + oh-my-zsh + plugins
+    ├── python-dev/            # uv, gh CLI, git config
+    ├── editors/               # VS Code extensions + settings
+    └── fonts/                 # Nerd Fonts
 ```
 
 ## Adding new states
