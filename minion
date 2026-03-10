@@ -1,0 +1,16 @@
+# Salt minion config for masterless (salt-call --local) mode
+file_client: local
+
+# Root directories
+file_roots:
+  base:
+    - /srv/salt/states
+
+pillar_roots:
+  base:
+    - /srv/salt/pillar
+
+# Logging
+log_level: warning
+log_level_logfile: info
+log_file: /var/log/salt/minion

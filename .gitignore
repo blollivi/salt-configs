@@ -1,0 +1,19 @@
+# OS / build artefacts
+__pycache__/
+*.pyc
+*.pyo
+
+# Salt cache & log
+.salt/
+/var/cache/salt/
+*.log
+
+# Editor
+.vscode/
+*.swp
+*~
+.DS_Store
+
+# Secrets — never commit these
+pillar/secrets.sls
+pillar/credentials.sls
