@@ -33,9 +33,7 @@ gh_cli_keyring:
 gh_cli_repo:
   file.managed:
     - name: /etc/apt/sources.list.d/github-cli.list
-    - contents: |
-        deb [arch={{ grains['osarch'] }} signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg]
-        https://cli.github.com/packages stable main
+    - contents: "deb [arch={{ grains['osarch'] }} signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main"
     - require:
       - cmd: gh_cli_keyring
 

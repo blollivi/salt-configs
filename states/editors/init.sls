@@ -11,13 +11,7 @@
 {% set user = salt['pillar.get']('user:name', 'brendan') %}
 {% set home  = salt['pillar.get']('user:home', '/home/' ~ user) %}
 
-# Guard: skip extension install if `code` is not on PATH (WSL extension not set up yet)
-vscode_check:
-  cmd.run:
-    - name: which code
-    - onfail_stop: True
-
-# ── VS Code extensions (installed into WSL via `code` tunnel) ─
+# ── VS Code extensions (skip silently if `code` not on PATH yet) ─
 {% for ext in salt['pillar.get']('vscode:extensions', []) %}
 vscode_ext_{{ ext | replace('.', '_') | replace('-', '_') }}:
   cmd.run:
@@ -25,8 +19,7 @@ vscode_ext_{{ ext | replace('.', '_') | replace('-', '_') }}:
     - runas: {{ user }}
     - env:
       - HOME: {{ home }}
-    - require:
-      - cmd: vscode_check
+    - unless: "! which code"
 {% endfor %}
 
 # ── VS Code user settings (WSL-side path used by Remote-WSL) ──
@@ -42,6 +35,6 @@ vscode_settings:
     - source: salt://editors/files/settings.json
     - user: {{ user }}
     - mode: '0644'
-    - replace: False   # don't overwrite user's customisations
+    - replace: False
     - require:
       - file: vscode_settings_dir

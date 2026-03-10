@@ -28,8 +28,13 @@ fi
 
 # ── 2. Install Salt ───────────────────────────────────────────────────────────
 if ! command -v salt-call >/dev/null 2>&1; then
-  info "Installing Salt..."
-  curl -fsSL https://bootstrap.saltproject.io | sudo sh -s -- -X stable
+  info "Installing Salt via apt..."
+  sudo mkdir -p /etc/apt/keyrings
+  curl -fsSL https://packages.broadcom.com/artifactory/api/security/keypair/SaltProjectKey/public \
+    | sudo gpg --dearmor -o /etc/apt/keyrings/salt-archive-keyring.gpg
+  echo "deb [signed-by=/etc/apt/keyrings/salt-archive-keyring.gpg arch=amd64] https://packages.broadcom.com/artifactory/saltproject-deb stable main" \
+    | sudo tee /etc/apt/sources.list.d/salt.list
+  sudo apt-get update -qq && sudo apt-get install -y salt-minion
   ok "Salt installed"
 else
   ok "Salt already installed: $(salt-call --version)"

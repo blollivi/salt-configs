@@ -18,7 +18,6 @@ powerlevel10k:
   git.cloned:
     - name: https://github.com/romkatv/powerlevel10k.git
     - target: {{ home }}/.oh-my-zsh/custom/themes/powerlevel10k
-    - depth: 1
     - user: {{ user }}
     - unless: test -d {{ home }}/.oh-my-zsh/custom/themes/powerlevel10k
     - require:
